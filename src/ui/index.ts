@@ -462,7 +462,19 @@ export function renderApp(): string {
           tbody.innerHTML = '';
           data.leaderboard.forEach((entry, index) => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${index + 1}</td><td>${entry.username}</td><td>${entry.score}</td>`;
+
+            const rankCell = document.createElement('td');
+            rankCell.textContent = String(index + 1);
+            tr.appendChild(rankCell);
+
+            const nameCell = document.createElement('td');
+            nameCell.textContent = entry.username;
+            tr.appendChild(nameCell);
+
+            const scoreCell = document.createElement('td');
+            scoreCell.textContent = String(entry.score);
+            tr.appendChild(scoreCell);
+
             tbody.appendChild(tr);
           });
         } catch (err) {
