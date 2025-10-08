@@ -1,2 +1,76 @@
 # AlgorithmGuessr
-这是一个基于Cloudflare Worker的项目，用户可以指定一个难度范围，系统会在CodeForces平台上这个难度范围中随机找一道题，并且在VJudge平台中获得这个题面和难度和题目标签。系统提供选择框，用户需要通过自己的判断来判断这道题的算法标签，系统会将用户的选择如果是对的，就涂成绿色，如果错了，就涂成红色的。此外，这个系统还有用户系统，可以登录与注册，并且每个用户有一个评分，每次答对一个算法标签就+1分，答错一个就-1分。管理员可以封禁与解封用户，也可以开放注册通道，也可以后台注册用户
+
+AlgorithmGuessr 是一个部署在 Cloudflare Workers 上的互动练习平台。用户可以在指定的 Codeforces 难度区间内随机抽取题目，通过阅读题面判断题目的算法标签。当用户提交答案后，系统会给出正误反馈并实时更新积分，管理员还可以进行用户管理与注册控制。
+
+## 功能概览
+
+- **题目抽取**：从 Codeforces 题库中按指定难度随机抽题，并尝试从 VJudge 获取题面、标签及难度等信息，无法获取时自动回退到原题链接。
+- **算法标签挑战**：内置常见算法标签候选项。用户多选后提交，系统校验是否完全匹配题目标签，答对加分、答错扣分。
+- **用户系统**：
+  - 用户注册 / 登录（支持首个用户自动成为管理员）。
+  - JWT 鉴权，支持持久化登录。
+  - 个人积分展示与排行榜。
+- **管理员能力**：
+  - 封禁 / 解封用户。
+  - 后台创建用户。
+  - 开启 / 关闭公开注册入口。
+  - 查看全部用户列表及状态。
+
+## 项目结构
+
+```
+.
+├── package.json          # 项目依赖与脚本
+├── schema.sql            # D1 数据库初始化脚本
+├── src
+│   ├── ui
+│   │   └── index.ts      # 渲染前端界面的模板字符串
+│   └── worker.ts         # Cloudflare Worker 主程序
+├── tsconfig.json
+└── wrangler.toml         # Wrangler 配置
+```
+
+## 本地开发
+
+1. 安装依赖：
+   ```bash
+   npm install
+   ```
+2. 根据需要修改 `wrangler.toml`，填入实际的 KV、D1 等绑定信息。
+3. 初始化数据库（首次运行）：
+   ```bash
+   wrangler d1 execute algorithm_guessr_db --file=./schema.sql
+   ```
+4. 启动本地开发环境：
+   ```bash
+   npm run dev
+   ```
+
+## 部署
+
+1. 确保 Cloudflare 账户中已经创建好对应的 KV 命名空间与 D1 数据库，并在 `wrangler.toml` 中填入 `id` 与 `database_id`。
+2. 将 `JWT_SECRET` 设置为高强度随机字符串，可通过 `wrangler secret put JWT_SECRET` 注入私密值。
+3. 同步数据库 Schema：
+   ```bash
+   wrangler d1 execute algorithm_guessr_db --file=./schema.sql
+   ```
+4. 执行部署：
+   ```bash
+   npm run deploy
+   ```
+
+## 使用说明
+
+- 第一次部署后，首个注册的账户会自动拥有管理员权限，可用于配置系统。
+- 若关闭了公开注册，普通用户无法通过自助注册入口，只能由管理员在后台创建。
+- 题面与标签依赖第三方接口，若无法获取，会提示用户前往 Codeforces 原题阅读。
+
+## 安全提示
+
+- 项目默认使用 SHA-256 + 随机盐进行密码哈希，建议在生产环境下结合 HTTPS 与 Cloudflare Zero Trust 等额外防护。
+- `JWT_SECRET` 必须妥善保管，定期更换，并确保不同环境使用不同的密钥。
+- 请在 Cloudflare 仪表盘中配置合理的速率限制，避免被恶意刷分。
+
+## 许可证
+
+本项目采用 [MIT License](./LICENSE)。
