@@ -521,7 +521,7 @@ export function renderApp(): string {
         }
       }
 
-      function appendTextCell(row: HTMLTableRowElement, value: string | number) {
+      function appendTextCell(row, value) {
         const cell = document.createElement('td');
         cell.textContent = String(value);
         row.appendChild(cell);
