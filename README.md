@@ -60,17 +60,30 @@ AlgorithmGuessr 是一个部署在 Cloudflare Workers 上的互动练习平台�
    ```
    > Codespaces 运行在远端环境，使用 `--remote` 选项以便通过公网 URL 访问。
 
-## 部署
+## 部署（全程使用 Wrangler CLI）
 
-1. 确保 Cloudflare 账户中已经创建好对应的 KV 命名空间与 D1 数据库，并在 `wrangler.toml` 中填入 `id` 与 `database_id`。
-2. 将 `JWT_SECRET` 设置为高强度随机字符串，可通过 `wrangler secret put JWT_SECRET` 注入私密值。
-3. 同步数据库 Schema：
+1. 登录 Cloudflare 账号：
+   ```bash
+   wrangler login
+   ```
+2. 创建并记录资源标识：
+   ```bash
+   wrangler kv namespace create PROBLEM_CACHE
+   wrangler kv namespace create PROBLEM_CACHE --preview
+   wrangler d1 create algorithm_guessr_db
+   ```
+   > 命令执行后会输出 `id`、`preview_id` 与 `database_id`，请将它们填写到 `wrangler.toml` 中对应的位置。
+3. 注入私密配置：
+   ```bash
+   wrangler secret put JWT_SECRET
+   ```
+4. 初始化数据库 Schema：
    ```bash
    wrangler d1 execute algorithm_guessr_db --file=./schema.sql
    ```
-4. 执行部署：
+5. 部署到 Cloudflare Workers：
    ```bash
-   npm run deploy
+   wrangler deploy
    ```
 
 ## 使用说明
