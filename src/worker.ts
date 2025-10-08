@@ -68,6 +68,68 @@ const AVAILABLE_TAGS = [
   'chinese remainder theorem',
 ];
 
+const TAG_TRANSLATIONS: Record<string, string> = {
+  dp: '动态规划',
+  greedy: '贪心',
+  implementation: '实现',
+  math: '数学',
+  'brute force': '暴力枚举',
+  'data structures': '数据结构',
+  graphs: '图论',
+  'constructive algorithms': '构造',
+  sortings: '排序',
+  'binary search': '二分查找',
+  combinatorics: '组合数学',
+  'number theory': '数论',
+  trees: '树',
+  geometry: '几何',
+  'shortest paths': '最短路',
+  strings: '字符串',
+  'dfs and similar': '深搜及相关',
+  'two pointers': '双指针',
+  bitmasks: '位运算/状态压缩',
+  probabilities: '概率',
+  hashing: '哈希',
+  games: '博弈论',
+  flows: '网络流',
+  matrices: '矩阵',
+  'meet-in-the-middle': '折半搜索',
+  'graph matchings': '图匹配',
+  'ternary search': '三分查找',
+  dsu: '并查集',
+  'divide and conquer': '分治',
+  'expression parsing': '表达式解析',
+  schedules: '调度',
+  scc: '强连通分量',
+  fft: '快速傅里叶变换',
+  interactive: '交互题',
+  '2-sat': '2-SAT',
+  'chinese remainder theorem': '中国剩余定理',
+};
+
+const EXTENSION_TTL_SECONDS = 5 * 60;
+
+function translateTag(tag: string): string {
+  return TAG_TRANSLATIONS[tag] ?? tag;
+}
+
+function extensionVerificationKey(userId: number): string {
+  return `extension:${userId}`;
+}
+
+async function markExtensionVerified(env: Env, userId: number): Promise<void> {
+  await env.PROBLEM_CACHE.put(
+    extensionVerificationKey(userId),
+    JSON.stringify({ verifiedAt: Date.now() }),
+    { expirationTtl: EXTENSION_TTL_SECONDS },
+  );
+}
+
+async function isExtensionVerified(env: Env, userId: number): Promise<boolean> {
+  const cached = await env.PROBLEM_CACHE.get(extensionVerificationKey(userId), 'json');
+  return Boolean(cached);
+}
+
 const router = Router();
 
 router.options('*', () =>
@@ -163,12 +225,32 @@ router.get('/api/me', withAuth(async (request, env, user) => {
       is_banned: user.is_banned === 1,
     },
     registrationOpen,
+    extensionVerified: await isExtensionVerified(env, user.id),
   });
+}));
+
+router.get('/api/extension/status', withAuth(async (request, env, user) => {
+  const verified = await isExtensionVerified(env, user.id);
+  return json({ verified });
+}));
+
+router.post('/api/extension/verify', withAuth(async (request, env, user) => {
+  const { installed } = await readJson(request);
+  if (installed === false) {
+    await env.PROBLEM_CACHE.delete(extensionVerificationKey(user.id));
+    return json({ verified: false });
+  }
+  await markExtensionVerified(env, user.id);
+  return json({ verified: true });
 }));
 
 router.get('/api/problem', withAuth(async (request, env, user) => {
   if (user.is_banned) {
     return error('账号已被封禁', 403);
+  }
+  const extensionVerified = await isExtensionVerified(env, user.id);
+  if (!extensionVerified) {
+    return error('请先安装并启用防作弊插件，然后刷新页面重试', 428);
   }
   const url = new URL(request.url);
   const min = Number(url.searchParams.get('min') || '800');
@@ -187,7 +269,7 @@ router.get('/api/problem', withAuth(async (request, env, user) => {
       difficulty: problem.difficulty,
       statement: problem.statement,
       url: problem.url,
-      availableTags: AVAILABLE_TAGS,
+      availableTags: AVAILABLE_TAGS.map((tag) => ({ key: tag, label: translateTag(tag) })),
     },
   });
 }));
@@ -195,6 +277,10 @@ router.get('/api/problem', withAuth(async (request, env, user) => {
 router.post('/api/attempt', withAuth(async (request, env, user) => {
   if (user.is_banned) {
     return error('账号已被封禁', 403);
+  }
+  const extensionVerified = await isExtensionVerified(env, user.id);
+  if (!extensionVerified) {
+    return error('检测到防作弊插件未激活，无法提交答案', 428);
   }
   const { problemId, selectedTags } = await readJson(request);
   if (!problemId || !Array.isArray(selectedTags)) {

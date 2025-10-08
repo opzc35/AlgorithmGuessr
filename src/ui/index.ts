@@ -7,42 +7,50 @@ export function renderApp(): string {
     <title>Algorithm Guessr</title>
     <style>
       :root {
-        color-scheme: light dark;
+        color-scheme: dark;
         font-family: "Inter", "SF Pro Display", "Segoe UI", sans-serif;
+        background-color: #0b1120;
       }
       body {
         margin: 0;
         padding: 0;
-        background: radial-gradient(circle at top, #eef2ff, #f8fafc);
+        background: radial-gradient(circle at top, #1e293b, #0b1120 55%);
         min-height: 100vh;
         display: flex;
         justify-content: center;
         align-items: flex-start;
-        color: #0f172a;
+        color: #e2e8f0;
+      }
+      a {
+        color: #38bdf8;
+      }
+      a:hover {
+        color: #67e8f9;
       }
       .page {
         width: min(1100px, 95vw);
         margin: 3rem auto;
-        background: rgba(255, 255, 255, 0.85);
+        background: rgba(15, 23, 42, 0.92);
         border-radius: 24px;
-        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.15);
+        box-shadow: 0 20px 45px rgba(2, 6, 23, 0.7);
         overflow: hidden;
         backdrop-filter: blur(12px);
-        border: 1px solid rgba(148, 163, 184, 0.25);
+        border: 1px solid rgba(71, 85, 105, 0.5);
       }
       header {
         padding: 2.5rem 3rem 2rem;
-        background: linear-gradient(135deg, rgba(79, 70, 229, 0.95), rgba(14, 116, 144, 0.95));
-        color: white;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.65), rgba(14, 165, 233, 0.85));
+        color: #0f172a;
       }
       header h1 {
         margin: 0 0 0.5rem;
         font-size: 2.4rem;
         letter-spacing: -0.03em;
+        color: #e2e8f0;
       }
       header p {
         margin: 0;
-        opacity: 0.8;
+        color: rgba(226, 232, 240, 0.8);
       }
       main {
         padding: 2.5rem 3rem 3rem;
@@ -50,15 +58,15 @@ export function renderApp(): string {
         gap: 2.5rem;
       }
       section {
-        background: rgba(248, 250, 252, 0.9);
+        background: rgba(11, 22, 40, 0.75);
         padding: 2rem;
         border-radius: 20px;
-        border: 1px solid rgba(148, 163, 184, 0.2);
+        border: 1px solid rgba(94, 106, 123, 0.4);
       }
       h2 {
         margin-top: 0;
         font-size: 1.4rem;
-        color: #1e293b;
+        color: #f1f5f9;
       }
       form {
         display: grid;
@@ -68,6 +76,7 @@ export function renderApp(): string {
         display: grid;
         gap: 0.35rem;
         font-size: 0.95rem;
+        color: #cbd5f5;
       }
       input,
       select,
@@ -80,38 +89,44 @@ export function renderApp(): string {
       textarea {
         padding: 0.75rem 1rem;
         border-radius: 12px;
-        border: 1px solid rgba(148, 163, 184, 0.35);
-        background: white;
-        transition: border 150ms ease, box-shadow 150ms ease;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        background: rgba(15, 23, 42, 0.75);
+        color: #e2e8f0;
+        transition: border 150ms ease, box-shadow 150ms ease, background 150ms ease;
+      }
+      input::placeholder,
+      textarea::placeholder {
+        color: rgba(148, 163, 184, 0.6);
       }
       input:focus,
       select:focus,
       textarea:focus {
         outline: none;
-        border-color: rgba(79, 70, 229, 0.6);
-        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
+        border-color: rgba(56, 189, 248, 0.8);
+        box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.2);
+        background: rgba(15, 23, 42, 0.9);
       }
       button {
         padding: 0.85rem 1.4rem;
         border-radius: 14px;
         border: none;
-        background: linear-gradient(135deg, #4f46e5, #0ea5e9);
-        color: white;
+        background: linear-gradient(135deg, #38bdf8, #6366f1);
+        color: #0b1120;
         font-weight: 600;
         cursor: pointer;
         transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
         justify-self: start;
       }
       button.secondary {
-        background: rgba(15, 23, 42, 0.05);
-        color: #0f172a;
+        background: rgba(15, 118, 110, 0.25);
+        color: #5eead4;
       }
       button:hover {
         transform: translateY(-1px);
-        box-shadow: 0 12px 25px rgba(79, 70, 229, 0.25);
+        box-shadow: 0 12px 25px rgba(15, 118, 110, 0.45);
       }
       button:disabled {
-        opacity: 0.5;
+        opacity: 0.45;
         cursor: not-allowed;
         transform: none;
         box-shadow: none;
@@ -135,13 +150,13 @@ export function renderApp(): string {
         flex-wrap: wrap;
         gap: 0.75rem;
         font-size: 0.9rem;
-        color: rgba(15, 23, 42, 0.65);
+        color: rgba(203, 213, 225, 0.75);
       }
       .problem-statement {
-        background: white;
+        background: rgba(15, 23, 42, 0.85);
         border-radius: 16px;
         padding: 1.5rem;
-        border: 1px solid rgba(148, 163, 184, 0.25);
+        border: 1px solid rgba(71, 85, 105, 0.45);
         max-height: 420px;
         overflow: auto;
       }
@@ -154,48 +169,50 @@ export function renderApp(): string {
         padding: 0.5rem 1rem;
         border-radius: 999px;
         border: 1px solid rgba(148, 163, 184, 0.4);
-        background: white;
+        background: rgba(30, 41, 59, 0.7);
+        color: #e2e8f0;
         cursor: pointer;
         transition: background 150ms ease, color 150ms ease, border 150ms ease, transform 150ms ease;
       }
       .tag-option.selected {
-        background: rgba(79, 70, 229, 0.12);
-        border-color: rgba(79, 70, 229, 0.6);
-        color: #312e81;
+        background: rgba(99, 102, 241, 0.25);
+        border-color: rgba(129, 140, 248, 0.8);
+        color: #c7d2fe;
         transform: translateY(-1px);
       }
       .tag-option.correct {
-        background: rgba(34, 197, 94, 0.15);
-        border-color: rgba(34, 197, 94, 0.6);
-        color: #166534;
+        background: rgba(34, 197, 94, 0.25);
+        border-color: rgba(74, 222, 128, 0.8);
+        color: #bbf7d0;
       }
       .tag-option.incorrect {
-        background: rgba(239, 68, 68, 0.15);
-        border-color: rgba(239, 68, 68, 0.6);
-        color: #991b1b;
+        background: rgba(248, 113, 113, 0.25);
+        border-color: rgba(248, 113, 113, 0.7);
+        color: #fecaca;
       }
       .message {
         font-weight: 600;
         padding: 0.75rem 1rem;
         border-radius: 12px;
-        background: rgba(79, 70, 229, 0.08);
-        border: 1px solid rgba(79, 70, 229, 0.2);
-        color: #3730a3;
+        background: rgba(59, 130, 246, 0.12);
+        border: 1px solid rgba(37, 99, 235, 0.35);
+        color: #bfdbfe;
       }
       .message.error {
-        background: rgba(239, 68, 68, 0.08);
-        border-color: rgba(239, 68, 68, 0.2);
-        color: #b91c1c;
+        background: rgba(248, 113, 113, 0.15);
+        border-color: rgba(239, 68, 68, 0.45);
+        color: #fecaca;
       }
       table {
         width: 100%;
         border-collapse: collapse;
+        color: #e2e8f0;
       }
       th,
       td {
         text-align: left;
         padding: 0.75rem 0.5rem;
-        border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+        border-bottom: 1px solid rgba(71, 85, 105, 0.35);
       }
       .hidden {
         display: none !important;
@@ -296,6 +313,9 @@ export function renderApp(): string {
               <span>来源：Codeforces</span>
             </div>
           </header>
+          <p id="extension-warning" class="message error hidden" style="margin:0;">
+            请先安装并启用平台指定的 Tampermonkey 防作弊脚本，页面检测到脚本后才可以开始抽题。
+          </p>
           <div id="problem-statement" class="problem-statement">请先选择难度范围并加载题目。</div>
           <div class="grid-two">
             <form id="difficulty-form" class="problem-controls">
@@ -326,13 +346,16 @@ export function renderApp(): string {
       </main>
     </div>
     <script>
+      const EXTENSION_STATUS_INTERVAL = 5000;
       const state = {
         token: localStorage.getItem('alg_guessr_token'),
         user: null,
         problem: null,
         registrationOpen: true,
         selectedTags: new Set(),
+        extensionVerified: false,
       };
+      let extensionStatusTimer = null;
 
       function setMessage(el, text, type = '') {
         if (!el) return;
@@ -392,6 +415,7 @@ export function renderApp(): string {
           state.problem = null;
           state.selectedTags.clear();
         }
+        updateExtensionUI();
       }
 
       function updateRegistrationUI() {
@@ -410,19 +434,22 @@ export function renderApp(): string {
         const container = document.getElementById('tag-options');
         container.innerHTML = '';
         state.selectedTags.clear();
-        options.forEach((tag) => {
+        options.forEach((item) => {
+          const key = typeof item === 'string' ? item : item?.key;
+          const label = typeof item === 'string' ? item : item?.label || item?.key || '';
+          if (!key) return;
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'tag-option';
-          btn.textContent = tag;
-          btn.dataset.tag = tag;
+          btn.textContent = label;
+          btn.dataset.tag = key;
           btn.addEventListener('click', () => {
             if (btn.classList.contains('correct') || btn.classList.contains('incorrect')) return;
-            if (state.selectedTags.has(tag)) {
-              state.selectedTags.delete(tag);
+            if (state.selectedTags.has(key)) {
+              state.selectedTags.delete(key);
               btn.classList.remove('selected');
             } else {
-              state.selectedTags.add(tag);
+              state.selectedTags.add(key);
               btn.classList.add('selected');
             }
             document.getElementById('submit-attempt').disabled = state.selectedTags.size === 0;
@@ -455,6 +482,49 @@ export function renderApp(): string {
         );
       }
 
+      function setExtensionLock(button, locked) {
+        if (!button) return;
+        if (locked) {
+          button.dataset.extensionLock = 'true';
+          button.disabled = true;
+        } else if (button.dataset.extensionLock) {
+          delete button.dataset.extensionLock;
+          button.disabled = false;
+        }
+      }
+
+      function updateExtensionUI() {
+        const warning = document.getElementById('extension-warning');
+        const fetchBtn = document.querySelector('#difficulty-form button[type="submit"]');
+        const refreshBtn = document.getElementById('refresh-problem');
+        const submitBtn = document.getElementById('submit-attempt');
+        const shouldWarn = Boolean(state.user) && !state.extensionVerified;
+        if (warning) {
+          warning.classList.toggle('hidden', !shouldWarn);
+        }
+        if (shouldWarn) {
+          setExtensionLock(fetchBtn, true);
+          setExtensionLock(refreshBtn, true);
+          if (submitBtn) {
+            submitBtn.dataset.extensionLock = 'true';
+            submitBtn.disabled = true;
+          }
+        } else {
+          setExtensionLock(fetchBtn, false);
+          setExtensionLock(refreshBtn, false);
+          if (submitBtn && submitBtn.dataset.extensionLock) {
+            delete submitBtn.dataset.extensionLock;
+            submitBtn.disabled = state.selectedTags.size === 0;
+          }
+        }
+      }
+
+      function appendTextCell(row: HTMLTableRowElement, value: string | number) {
+        const cell = document.createElement('td');
+        cell.textContent = String(value);
+        row.appendChild(cell);
+      }
+
       async function loadLeaderboard() {
         try {
           const data = await api('/api/leaderboard', { method: 'GET', headers: {} });
@@ -463,17 +533,9 @@ export function renderApp(): string {
           data.leaderboard.forEach((entry, index) => {
             const tr = document.createElement('tr');
 
-            const rankCell = document.createElement('td');
-            rankCell.textContent = String(index + 1);
-            tr.appendChild(rankCell);
-
-            const nameCell = document.createElement('td');
-            nameCell.textContent = entry.username;
-            tr.appendChild(nameCell);
-
-            const scoreCell = document.createElement('td');
-            scoreCell.textContent = String(entry.score);
-            tr.appendChild(scoreCell);
+            appendTextCell(tr, index + 1);
+            appendTextCell(tr, entry.username);
+            appendTextCell(tr, entry.score);
 
             tbody.appendChild(tr);
           });
@@ -512,24 +574,63 @@ export function renderApp(): string {
         }
       }
 
+      function stopExtensionWatcher() {
+        if (extensionStatusTimer) {
+          clearInterval(extensionStatusTimer);
+          extensionStatusTimer = null;
+        }
+      }
+
+      function startExtensionWatcher() {
+        stopExtensionWatcher();
+        if (!state.token) return;
+        checkExtensionStatus();
+        window.dispatchEvent(new CustomEvent('algGuessrExtensionCheck'));
+        extensionStatusTimer = setInterval(checkExtensionStatus, EXTENSION_STATUS_INTERVAL);
+      }
+
+      async function checkExtensionStatus() {
+        if (!state.token) {
+          state.extensionVerified = false;
+          updateExtensionUI();
+          return;
+        }
+        try {
+          const data = await api('/api/extension/status', { method: 'GET', headers: {} });
+          state.extensionVerified = Boolean(data?.verified);
+        } catch (err) {
+          state.extensionVerified = false;
+        }
+        updateExtensionUI();
+      }
+
       async function fetchProfile() {
         if (!state.token) {
           state.user = null;
           updateAuthUI();
+          stopExtensionWatcher();
+          state.extensionVerified = false;
+          updateExtensionUI();
           return;
         }
         try {
           const data = await api('/api/me', { method: 'GET', headers: {} });
           state.user = data.user;
           state.registrationOpen = data.registrationOpen;
+          state.extensionVerified = Boolean(data.extensionVerified);
           updateAuthUI();
           updateRegistrationUI();
+          updateExtensionUI();
+          startExtensionWatcher();
         } catch (err) {
           console.warn('profile fetch failed', err);
           state.token = null;
           localStorage.removeItem('alg_guessr_token');
           state.user = null;
           updateAuthUI();
+          stopExtensionWatcher();
+          state.extensionVerified = false;
+          updateExtensionUI();
         }
       }
 
@@ -542,21 +643,10 @@ export function renderApp(): string {
           data.users.forEach((user) => {
             const tr = document.createElement('tr');
 
-            const nameCell = document.createElement('td');
-            nameCell.textContent = user.username;
-            tr.appendChild(nameCell);
-
-            const scoreCell = document.createElement('td');
-            scoreCell.textContent = String(user.score);
-            tr.appendChild(scoreCell);
-
-            const roleCell = document.createElement('td');
-            roleCell.textContent = user.role;
-            tr.appendChild(roleCell);
-
-            const statusCell = document.createElement('td');
-            statusCell.textContent = user.is_banned ? '封禁' : '正常';
-            tr.appendChild(statusCell);
+            appendTextCell(tr, user.username);
+            appendTextCell(tr, user.score);
+            appendTextCell(tr, user.role);
+            appendTextCell(tr, user.is_banned ? '封禁' : '正常');
 
             tbody.appendChild(tr);
           });
@@ -602,6 +692,8 @@ export function renderApp(): string {
         state.token = null;
         state.user = null;
         localStorage.removeItem('alg_guessr_token');
+        stopExtensionWatcher();
+        state.extensionVerified = false;
         updateAuthUI();
       });
 
@@ -686,6 +778,11 @@ export function renderApp(): string {
         } catch (err) {
           alert(err.message || '解封失败');
         }
+      });
+
+      window.addEventListener('algGuessrExtensionVerified', () => {
+        state.extensionVerified = true;
+        updateExtensionUI();
       });
 
       fetchStatus();
