@@ -242,6 +242,7 @@ export function renderApp(): string {
           <div class="grid-two">
             <form id="login-form" method="post" action=".">
               <h3>登录</h3>
+              <input type="hidden" name="_action" value="login" />
               <label>用户名<input name="username" autocomplete="username" required /></label>
               <label>密码<input type="password" name="password" autocomplete="current-password" required /></label>
               <button type="submit">登录</button>
@@ -249,6 +250,7 @@ export function renderApp(): string {
             </form>
             <form id="register-form" method="post" action=".">
               <h3>注册</h3>
+              <input type="hidden" name="_action" value="register" />
               <label>用户名<input name="username" autocomplete="username" required minlength="3" maxlength="32" /></label>
               <label>密码<input type="password" name="password" autocomplete="new-password" required minlength="6" maxlength="64" /></label>
               <button type="submit">注册</button>

@@ -147,6 +147,84 @@ router.get('/', () =>
   }),
 );
 
+router.post('/', async (request, env: Env) => {
+  const contentType = request.headers.get('content-type') || '';
+  const isFormPost =
+    contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data');
+
+  if (!isFormPost) {
+    return new Response(renderApp(), {
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+      },
+    });
+  }
+
+  const formData = await request.formData();
+  const action = typeof formData.get('_action') === 'string' ? (formData.get('_action') as string) : '';
+
+  if (action === 'login') {
+    const username = formData.get('username');
+    const password = formData.get('password');
+    const result = await attemptLogin(
+      env,
+      typeof username === 'string' ? username : '',
+      typeof password === 'string' ? password : '',
+    );
+
+    if (!result.ok || !result.token) {
+      return renderFallbackPage({
+        title: '登录失败',
+        message: result.error ?? '登录失败，请重试。',
+        success: false,
+        extraHtml: '<p><a href="/">返回登录页</a></p>',
+      });
+    }
+
+    return renderFallbackPage({
+      title: '登录成功',
+      message: '正在跳转，请稍候...',
+      success: true,
+      script: `try { localStorage.setItem('alg_guessr_token', ${JSON.stringify(result.token)}); } catch (err) {}
+window.location.replace('/')`,
+      extraHtml: '<noscript>登录需要启用 JavaScript。</noscript>',
+    });
+  }
+
+  if (action === 'register') {
+    const username = formData.get('username');
+    const password = formData.get('password');
+    const result = await attemptRegistration(
+      env,
+      typeof username === 'string' ? username : '',
+      typeof password === 'string' ? password : '',
+    );
+
+    if (!result.ok) {
+      return renderFallbackPage({
+        title: '注册失败',
+        message: result.error ?? '注册失败，请稍后再试。',
+        success: false,
+        extraHtml: '<p><a href="/">返回注册页</a></p>',
+      });
+    }
+
+    return renderFallbackPage({
+      title: '注册成功',
+      message: '注册成功，请使用刚才的账户登录。',
+      success: true,
+      script: "setTimeout(() => { window.location.replace('/') }, 1500);",
+      extraHtml: '<p><a href="/">立即返回首页</a></p>',
+    });
+  }
+
+  return new Response(renderApp(), {
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+    },
+  });
+});
+
 router.get('/api/status', async (request, env: Env) => {
   const registrationOpen = await getRegistrationState(env);
   return json({ registrationOpen });
@@ -154,64 +232,20 @@ router.get('/api/status', async (request, env: Env) => {
 
 router.post('/api/register', async (request, env: Env) => {
   const { username, password } = await readJson(request);
-  if (!username || !password) {
-    return error('用户名和密码不能为空', 400);
+  const result = await attemptRegistration(env, username, password);
+  if (!result.ok) {
+    return error(result.error ?? '注册失败', result.status);
   }
-  if (typeof username !== 'string' || typeof password !== 'string') {
-    return error('参数格式不正确', 400);
-  }
-  const trimmedUsername = username.trim();
-  if (trimmedUsername.length < 3 || trimmedUsername.length > 32) {
-    return error('用户名长度需在 3-32 之间', 400);
-  }
-  if (password.length < 6 || password.length > 64) {
-    return error('密码长度需在 6-64 之间', 400);
-  }
-
-  const userCountRow = await env.DB.prepare('SELECT COUNT(*) as count FROM users').first<{ count: number }>();
-  const registrationOpen = await getRegistrationState(env);
-  if (userCountRow && userCountRow.count > 0 && !registrationOpen) {
-    return error('注册暂未开放', 403);
-  }
-
-  const { hash, salt } = await hashPassword(password);
-  const role = userCountRow && userCountRow.count === 0 ? 'admin' : 'user';
-  try {
-    await env.DB.prepare(
-      `INSERT INTO users (username, password_hash, salt, role)
-       VALUES (?, ?, ?, ?)`,
-    )
-      .bind(trimmedUsername, hash, salt, role)
-      .run();
-  } catch (err) {
-    return error('用户名已存在', 409);
-  }
-
-  return json({ success: true, role });
+  return json({ success: true, role: result.role });
 });
 
 router.post('/api/login', async (request, env: Env) => {
   const { username, password } = await readJson(request);
-  if (!username || !password) {
-    return error('用户名和密码不能为空', 400);
+  const result = await attemptLogin(env, username, password);
+  if (!result.ok || !result.token) {
+    return error(result.error ?? '登录失败', result.status);
   }
-  const row = await env.DB.prepare('SELECT * FROM users WHERE username = ?').bind(username).first<UserRow>();
-  if (!row) {
-    return error('用户名或密码错误', 401);
-  }
-  if (row.is_banned) {
-    return error('账号已被封禁，请联系管理员', 403);
-  }
-  const valid = await verifyPassword(password, row.password_hash, row.salt);
-  if (!valid) {
-    return error('用户名或密码错误', 401);
-  }
-  const token = await createToken(env, {
-    sub: row.id,
-    username: row.username,
-    role: row.role,
-  });
-  return json({ token });
+  return json({ token: result.token });
 });
 
 router.get('/api/me', withAuth(async (request, env, user) => {
@@ -402,13 +436,191 @@ router.post('/api/admin/unban', withAdmin(async (request, env) => {
 
 router.post('/api/admin/registration-toggle', withAdmin(async (request, env) => {
   const { open } = await readJson(request);
+  if (typeof open !== 'boolean') {
+    return error('参数格式不正确', 400);
+  }
   const value = open ? 'true' : 'false';
   await env.DB.prepare(
     `INSERT INTO settings (key, value) VALUES ('registration_open', ?)
      ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
   ).bind(value).run();
-  return json({ registrationOpen: open ? true : false });
+  return json({ registrationOpen: open });
 }));
+
+interface RegistrationAttemptResult {
+  ok: boolean;
+  status: number;
+  error?: string;
+  role?: 'user' | 'admin';
+}
+
+interface LoginAttemptResult {
+  ok: boolean;
+  status: number;
+  error?: string;
+  token?: string;
+  user?: UserRow;
+}
+
+async function attemptRegistration(env: Env, usernameInput: unknown, passwordInput: unknown): Promise<RegistrationAttemptResult> {
+  if (typeof usernameInput !== 'string' || typeof passwordInput !== 'string') {
+    return { ok: false, status: 400, error: '参数格式不正确' };
+  }
+
+  const username = usernameInput.trim();
+  const password = passwordInput;
+
+  if (!username || !password) {
+    return { ok: false, status: 400, error: '用户名和密码不能为空' };
+  }
+
+  if (username.length < 3 || username.length > 32) {
+    return { ok: false, status: 400, error: '用户名长度需在 3-32 之间' };
+  }
+
+  if (password.length < 6 || password.length > 64) {
+    return { ok: false, status: 400, error: '密码长度需在 6-64 之间' };
+  }
+
+  const userCountRow = await env.DB.prepare('SELECT COUNT(*) as count FROM users').first<{ count: number }>();
+  const registrationOpen = await getRegistrationState(env);
+  if (userCountRow && userCountRow.count > 0 && !registrationOpen) {
+    return { ok: false, status: 403, error: '注册暂未开放' };
+  }
+
+  const { hash, salt } = await hashPassword(password);
+  const role: 'user' | 'admin' = userCountRow && userCountRow.count === 0 ? 'admin' : 'user';
+
+  try {
+    await env.DB.prepare(
+      `INSERT INTO users (username, password_hash, salt, role)
+       VALUES (?, ?, ?, ?)`,
+    )
+      .bind(username, hash, salt, role)
+      .run();
+  } catch (err) {
+    return { ok: false, status: 409, error: '用户名已存在' };
+  }
+
+  return { ok: true, status: 200, role };
+}
+
+async function attemptLogin(env: Env, usernameInput: unknown, passwordInput: unknown): Promise<LoginAttemptResult> {
+  if (typeof usernameInput !== 'string' || typeof passwordInput !== 'string') {
+    return { ok: false, status: 400, error: '参数格式不正确' };
+  }
+
+  const username = usernameInput.trim();
+  const password = passwordInput;
+
+  if (!username || !password) {
+    return { ok: false, status: 400, error: '用户名和密码不能为空' };
+  }
+
+  const row = await env.DB.prepare('SELECT * FROM users WHERE username = ?').bind(username).first<UserRow>();
+  if (!row) {
+    return { ok: false, status: 401, error: '用户名或密码错误' };
+  }
+
+  if (row.is_banned) {
+    return { ok: false, status: 403, error: '账号已被封禁，请联系管理员' };
+  }
+
+  const valid = await verifyPassword(password, row.password_hash, row.salt);
+  if (!valid) {
+    return { ok: false, status: 401, error: '用户名或密码错误' };
+  }
+
+  const token = await createToken(env, {
+    sub: row.id,
+    username: row.username,
+    role: row.role,
+  });
+
+  return { ok: true, status: 200, token, user: row };
+}
+
+function renderFallbackPage({
+  title,
+  message,
+  success,
+  extraHtml = '',
+  script,
+}: {
+  title: string;
+  message: string;
+  success: boolean;
+  extraHtml?: string;
+  script?: string;
+}): Response {
+  const accent = success ? '#34d399' : '#f87171';
+  const bg = success ? 'rgba(34,197,94,0.15)' : 'rgba(248,113,113,0.15)';
+  const icon = success ? '✅' : '⚠️';
+  const scriptTag = script ? `<script>(function(){${script}})();</script>` : '';
+
+  const html = `<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${title}</title>
+    <style>
+      body {
+        font-family: "Inter", "SF Pro Display", "Segoe UI", sans-serif;
+        min-height: 100vh;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at top, #1e293b, #0f172a 55%);
+        color: #e2e8f0;
+      }
+      .card {
+        background: rgba(15, 23, 42, 0.92);
+        border-radius: 20px;
+        padding: 2.5rem 3rem;
+        box-shadow: 0 25px 55px rgba(2, 6, 23, 0.65);
+        border: 1px solid rgba(71, 85, 105, 0.5);
+        text-align: center;
+        max-width: 460px;
+      }
+      h1 {
+        margin: 0 0 1rem;
+        font-size: 2rem;
+        color: ${accent};
+      }
+      p {
+        margin: 0 0 1.25rem;
+        line-height: 1.5;
+        background: ${bg};
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+        border: 1px solid ${accent}33;
+      }
+      a {
+        color: #38bdf8;
+      }
+      a:hover {
+        color: #67e8f9;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>${icon} ${title}</h1>
+      <p>${message}</p>
+      ${extraHtml}
+    </div>
+    ${scriptTag}
+  </body>
+</html>`;
+
+  return new Response(html, {
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+    },
+  });
+}
 
 router.all('*', () => error('未找到资源', 404));
 
