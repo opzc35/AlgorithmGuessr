@@ -541,7 +541,23 @@ export function renderApp(): string {
           tbody.innerHTML = '';
           data.users.forEach((user) => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${user.username}</td><td>${user.score}</td><td>${user.role}</td><td>${user.is_banned ? '封禁' : '正常'}</td>`;
+
+            const nameCell = document.createElement('td');
+            nameCell.textContent = user.username;
+            tr.appendChild(nameCell);
+
+            const scoreCell = document.createElement('td');
+            scoreCell.textContent = String(user.score);
+            tr.appendChild(scoreCell);
+
+            const roleCell = document.createElement('td');
+            roleCell.textContent = user.role;
+            tr.appendChild(roleCell);
+
+            const statusCell = document.createElement('td');
+            statusCell.textContent = user.is_banned ? '封禁' : '正常';
+            tr.appendChild(statusCell);
+
             tbody.appendChild(tr);
           });
           state.registrationOpen = data.registrationOpen;
