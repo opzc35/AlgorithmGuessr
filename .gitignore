@@ -1,0 +1,9 @@
+node_modules
+.dist
+.dist*
+.DS_Store
+wrangler.toml.local
+.env
+
+# Build outputs
+/dist
