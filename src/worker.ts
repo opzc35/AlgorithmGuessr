@@ -447,12 +447,26 @@ function addCors(response: Response): Response {
 }
 
 async function readJson(request: Request): Promise<any> {
+  const contentType = request.headers.get('content-type') || '';
   try {
-    if (request.headers.get('content-type')?.includes('application/json')) {
+    if (contentType.includes('application/json')) {
       return await request.json();
     }
+    if (contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      const data: Record<string, string> = {};
+      for (const [key, value] of formData.entries()) {
+        if (typeof value === 'string') {
+          data[key] = value;
+        }
+      }
+      return data;
+    }
     const text = await request.text();
-    return text ? JSON.parse(text) : {};
+    if (!text) {
+      return {};
+    }
+    return JSON.parse(text);
   } catch (err) {
     return {};
   }

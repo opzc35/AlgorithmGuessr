@@ -240,14 +240,14 @@ export function renderApp(): string {
         <section id="auth-section">
           <h2>账户</h2>
           <div class="grid-two">
-            <form id="login-form">
+            <form id="login-form" method="post" action=".">
               <h3>登录</h3>
               <label>用户名<input name="username" autocomplete="username" required /></label>
               <label>密码<input type="password" name="password" autocomplete="current-password" required /></label>
               <button type="submit">登录</button>
               <p id="login-error" class="message error hidden"></p>
             </form>
-            <form id="register-form">
+            <form id="register-form" method="post" action=".">
               <h3>注册</h3>
               <label>用户名<input name="username" autocomplete="username" required minlength="3" maxlength="32" /></label>
               <label>密码<input type="password" name="password" autocomplete="new-password" required minlength="6" maxlength="64" /></label>
@@ -273,12 +273,12 @@ export function renderApp(): string {
           <div id="admin-panel" class="hidden" style="margin-top: 1.5rem;">
             <h3>管理员控制台</h3>
             <div class="grid-two">
-              <form id="admin-register-form">
+              <form id="admin-register-form" method="post" action=".">
                 <label>用户名<input name="username" required /></label>
                 <label>密码<input type="password" name="password" required /></label>
                 <button type="submit">后台注册用户</button>
               </form>
-              <form id="admin-ban-form">
+              <form id="admin-ban-form" method="post" action=".">
                 <label>用户名<input name="username" required /></label>
                 <div style="display:flex; gap:0.75rem;">
                   <button type="submit">封禁用户</button>
