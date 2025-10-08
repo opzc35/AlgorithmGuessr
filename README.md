@@ -15,7 +15,6 @@ AlgorithmGuessr 是一个部署在 Cloudflare Workers 上的互动练习平台�
   - 后台创建用户。
   - 开启 / 关闭公开注册入口。
   - 查看全部用户列表及状态。
-- **防作弊校验**：要求选手在浏览器中安装指定的 Tampermonkey 脚本，脚本会定期向平台回报状态，未安装时无法抽题或提交。脚本同时会在 Codeforces 与 VJudge 页面自动隐藏官方标签信息。
 
 ## 项目结构
 
@@ -92,17 +91,6 @@ AlgorithmGuessr 是一个部署在 Cloudflare Workers 上的互动练习平台�
 - 第一次部署后，首个注册的账户会自动拥有管理员权限，可用于配置系统。
 - 若关闭了公开注册，普通用户无法通过自助注册入口，只能由管理员在后台创建。
 - 题面与标签依赖第三方接口，若无法获取，会提示用户前往 Codeforces 原题阅读。
-- 由于启用了防作弊校验，只有在 Tampermonkey 脚本主动上报后，抽题与提交按钮才会解锁。
-
-## 防作弊脚本安装
-
-1. 在浏览器中安装 [Tampermonkey](https://www.tampermonkey.net/)（或兼容的脚本管理扩展）。
-2. 打开 Tampermonkey 控制面板，选择 **Create a new script...**，将仓库中的 [`tampermonkey/algorithm-guessr.user.js`](./tampermonkey/algorithm-guessr.user.js) 全部内容复制粘贴进去并保存。
-3. 确认脚本处于启用状态。脚本会：
-   - 在访问 `algorithm-guessr.opzc35.workers.dev` 时自动向 `/api/extension/verify` 上报，平台检测到报告后即可抽题。
-   - 自动监听页面触发的 `algGuessrExtensionCheck` 事件，确保在登录后立即完成一次上报。
-   - 在 `codeforces.com` 与 `vjudge.net` 上移除“Tags/标签”等提示元素，避免选手提前看到答案。
-4. 用户登录平台后，可在页面顶部看到暗色主题界面，如果脚本未上报会在题目面板中显示红色提示。完成上报后按钮将自动解锁。
 
 ## 安全提示
 
