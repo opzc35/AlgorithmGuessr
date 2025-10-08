@@ -32,6 +32,9 @@ AlgorithmGuessr 是一个部署在 Cloudflare Workers 上的互动练习平台�
 
 ## 本地开发
 
+<img width="934" height="686" alt="image" src="https://github.com/user-attachments/assets/6021b6a5-612e-4237-891e-2831b0a2eec9" />
+推荐在Github自带的Codespace上面部署，Linux环境很方便
+
 1. 安装依赖：
    ```bash
    npm install
