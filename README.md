@@ -51,7 +51,7 @@ AlgorithmGuessr 是一个部署在 Cloudflare Workers 上的互动练习平台�
 
 ## 在 GitHub Codespaces 中快速体验
 
-1. 点击仓库页面上的 **Code → Create codespace on main**，等待环境自动构建。
+1. 点击仓库页面上的 **Code → Create codespace on main**，等待环境自动构建。等待10分钟左右
 2. Codespace 会基于 `.devcontainer/devcontainer.json` 自动安装 Node.js 20 与项目依赖。
 3. 首次启动后在终端执行数据库初始化：
    ```bash
